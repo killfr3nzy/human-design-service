@@ -1,14 +1,350 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Human Design</title>
-<style>body{background:#0b0d12;color:#e8eaef;font-family:system-ui;text-align:center;padding:40px}a{color:#7c6af0}</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Human Design — Разбор личности</title>
+  <meta name="description" content="Онлайн-сервис разбора личности по системе Human Design." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0d12; --bg-card: #141820; --bg-elevated: #1a1f2b; --border: #2a3142;
+      --text: #e8eaef; --text-muted: #9aa3b5; --accent: #7c6af0;
+      --accent-soft: rgba(124, 106, 240, 0.15); --generator: #4ade80; --mg: #22d3ee;
+      --projector: #f472b6; --manifestor: #fb923c; --reflector: #a78bfa;
+      --success: #34d399; --radius: 16px; --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .container { max-width: 720px; margin: 0 auto; padding: 24px 16px 80px; }
+    header { text-align: center; padding: 40px 0 32px; }
+    .logo { font-family: 'Playfair Display', serif; font-size: 2.1rem; font-weight: 700; background: linear-gradient(135deg, #c4b5fd, #7c6af0, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px; }
+    .tagline { color: var(--text-muted); font-size: 1.05rem; }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 24px; margin-bottom: 24px; box-shadow: var(--shadow); }
+    .card h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .card h2 span.icon { font-size: 1.4rem; }
+    .form-grid { display: grid; gap: 18px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 520px) { .form-row { grid-template-columns: 1fr; } }
+    label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
+    input, select { width: 100%; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 13px 14px; color: var(--text); font-size: 1rem; font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s; }
+    input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    input::placeholder { color: #5a6478; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: linear-gradient(135deg, #7c6af0, #a78bfa); color: white; border: none; border-radius: 12px; padding: 16px 24px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s; margin-top: 8px; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124, 106, 240, 0.35); }
+    .btn:active { transform: translateY(0); }
+    .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 12px; }
+    .btn-secondary:hover { border-color: var(--accent); background: var(--accent-soft); box-shadow: none; }
+    .types-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .type-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; cursor: pointer; transition: border-color 0.2s, background 0.2s; display: flex; gap: 14px; align-items: flex-start; }
+    .type-card:hover, .type-card.active { border-color: var(--accent); background: rgba(124, 106, 240, 0.08); }
+    .type-dot { width: 12px; height: 12px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .type-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+    .type-card p { font-size: 0.88rem; color: var(--text-muted); line-height: 1.45; }
+    #result { display: none; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .result-header { text-align: center; margin-bottom: 28px; }
+    .result-type { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; margin-bottom: 6px; }
+    .result-meta { color: var(--text-muted); font-size: 0.95rem; }
+    .badge { display: inline-block; background: var(--accent-soft); color: #c4b5fd; padding: 4px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 500; margin: 0 4px 8px 0; }
+    .section-title { font-size: 1.1rem; font-weight: 600; margin: 28px 0 12px; display: flex; align-items: center; gap: 8px; }
+    .info-block { background: var(--bg-elevated); border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; border-left: 3px solid var(--accent); }
+    .info-block h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+    .info-block p { font-size: 0.9rem; color: var(--text-muted); }
+    .centers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+    @media (max-width: 480px) { .centers-grid { grid-template-columns: repeat(2, 1fr); } }
+    .center-item { background: var(--bg-elevated); border-radius: 10px; padding: 12px 10px; text-align: center; font-size: 0.82rem; border: 1px solid var(--border); }
+    .center-item.defined { border-color: var(--success); background: rgba(52, 211, 153, 0.1); color: var(--success); }
+    .center-item.open { color: var(--text-muted); }
+    .tips-list { list-style: none; padding: 0; }
+    .tips-list li { position: relative; padding-left: 22px; margin-bottom: 10px; font-size: 0.92rem; color: var(--text-muted); }
+    .tips-list li::before { content: "→"; position: absolute; left: 0; color: var(--accent); font-weight: 600; }
+    .disclaimer { background: rgba(251, 146, 60, 0.1); border: 1px solid rgba(251, 146, 60, 0.3); border-radius: 12px; padding: 16px; font-size: 0.88rem; color: #fdba74; margin-top: 28px; line-height: 1.5; }
+    .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    .link-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 10px; font-size: 0.88rem; text-decoration: none; transition: border-color 0.2s, background 0.2s; }
+    .link-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+    footer { text-align: center; padding: 40px 16px 20px; color: var(--text-muted); font-size: 0.85rem; }
+    .hidden { display: none !important; }
+    .loading { display: none; text-align: center; padding: 40px; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .bodygraph-wrap { display: flex; justify-content: center; margin: 20px 0; padding: 20px 12px; background: linear-gradient(165deg, #12151e 0%, #0e1118 50%, #14101c 100%); border-radius: 20px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+    .bodygraph-wrap::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 30%, rgba(124, 106, 240, 0.08) 0%, transparent 60%); pointer-events: none; }
+    .bodygraph-wrap svg { max-width: 300px; width: 100%; height: auto; position: relative; z-index: 1; filter: drop-shadow(0 0 12px rgba(0,0,0,0.4)); }
+    .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+    .bar-row { display: grid; grid-template-columns: 140px 1fr 48px; align-items: center; gap: 10px; font-size: 0.88rem; }
+    @media (max-width: 480px) { .bar-row { grid-template-columns: 100px 1fr 40px; font-size: 0.8rem; } }
+    .bar-label { color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-track { height: 18px; background: var(--bg-elevated); border-radius: 9px; overflow: hidden; border: 1px solid var(--border); }
+    .bar-fill { height: 100%; border-radius: 9px; transition: width 0.8s ease; }
+    .bar-value { text-align: right; font-weight: 600; color: var(--text); }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+    .stat-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; }
+    .stat-card .num { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+    .stat-card .lbl { font-size: 0.8rem; color: var(--text-muted); }
+    .aura-box { background: var(--bg-elevated); border-radius: 12px; padding: 16px; margin: 16px 0; border: 1px solid var(--border); text-align: center; }
+    .aura-box .aura-title { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
+    .aura-box .aura-name { font-size: 1.15rem; font-weight: 600; }
+    .long-text { font-size: 0.95rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 14px; }
+    .highlight-list { display: grid; gap: 8px; margin: 12px 0; }
+    .highlight-item { display: flex; gap: 10px; align-items: flex-start; font-size: 0.9rem; color: var(--text-muted); }
+    .highlight-item .dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 7px; flex-shrink: 0; }
+  </style>
 </head>
 <body>
-<h1>Updating...</h1>
-<p>Full version with stylish bodygraph is being deployed.</p>
-<p><a href="https://hd-service-red.vercel.app">Open previous version</a></p>
+  <div class="container">
+    <header>
+      <div class="logo">Human Design</div>
+      <p class="tagline">Разбор личности по твоей энергетической карте</p>
+    </header>
+    <div class="card" id="intro-card">
+      <h2><span class="icon">✦</span> Что такое Human Design?</h2>
+      <p class="long-text">Human Design — система, объединяющая астрологию, И-Цзин, каббалу и чакры. По точным данным рождения строится «карта тела» (Bodygraph).</p>
+      <ul class="tips-list">
+        <li>Твой <strong>тип энергии</strong> и как правильно взаимодействовать с миром</li>
+        <li><strong>Стратегию</strong> — правильный способ принимать решения</li>
+        <li><strong>Внутренний авторитет</strong> — где в теле живёт твоя мудрость</li>
+        <li><strong>Профиль</strong> — роль, которую ты играешь в этой жизни</li>
+      </ul>
+    </div>
+    <div class="card" id="dist-card">
+      <h2><span class="icon">◉</span> Распределение типов в мире</h2>
+      <div class="bar-chart">
+        <div class="bar-row"><div class="bar-label">Generator</div><div class="bar-track"><div class="bar-fill" style="width:37%;background:#4ade80"></div></div><div class="bar-value">37%</div></div>
+        <div class="bar-row"><div class="bar-label">Man. Generator</div><div class="bar-track"><div class="bar-fill" style="width:33%;background:#22d3ee"></div></div><div class="bar-value">33%</div></div>
+        <div class="bar-row"><div class="bar-label">Projector</div><div class="bar-track"><div class="bar-fill" style="width:20%;background:#f472b6"></div></div><div class="bar-value">20%</div></div>
+        <div class="bar-row"><div class="bar-label">Manifestor</div><div class="bar-track"><div class="bar-fill" style="width:9%;background:#fb923c"></div></div><div class="bar-value">9%</div></div>
+        <div class="bar-row"><div class="bar-label">Reflector</div><div class="bar-track"><div class="bar-fill" style="width:1%;background:#a78bfa"></div></div><div class="bar-value">1%</div></div>
+      </div>
+    </div>
+    <div class="card" id="form-card">
+      <h2><span class="icon">◎</span> Введи данные рождения</h2>
+      <form id="hd-form" class="form-grid">
+        <div><label for="name">Имя (необязательно)</label><input type="text" id="name" placeholder="Как к тебе обращаться" /></div>
+        <div class="form-row">
+          <div><label for="date">Дата рождения *</label><input type="date" id="date" required /></div>
+          <div><label for="time">Время рождения *</label><input type="time" id="time" required value="12:00" /></div>
+        </div>
+        <div><label for="tz">Часовой пояс / город</label>
+          <select id="tz">
+            <option value="Asia/Jerusalem">Израиль (Тель-Авив / Иерусалим)</option>
+            <option value="Europe/Moscow">Москва (UTC+3)</option>
+            <option value="Europe/Kyiv">Киев (UTC+2/+3)</option>
+            <option value="Europe/Minsk">Минск (UTC+3)</option>
+            <option value="Asia/Almaty">Алматы (UTC+5)</option>
+            <option value="Europe/Berlin">Берлин / Центральная Европа</option>
+            <option value="Europe/London">Лондон</option>
+            <option value="America/New_York">Нью-Йорк (EST)</option>
+            <option value="America/Los_Angeles">Лос-Анджелес (PST)</option>
+            <option value="Asia/Dubai">Дубай</option>
+            <option value="UTC">UTC</option>
+          </select>
+        </div>
+        <div><label for="type-select">Или выбери тип, если уже знаешь</label>
+          <select id="type-select">
+            <option value="">— Не знаю, рассчитать —</option>
+            <option value="Generator">Generator (Генератор)</option>
+            <option value="Manifesting Generator">Manifesting Generator (МГ)</option>
+            <option value="Projector">Projector (Проектор)</option>
+            <option value="Manifestor">Manifestor (Манифестор)</option>
+            <option value="Reflector">Reflector (Рефлектор)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn">Получить разбор</button>
+      </form>
+    </div>
+    <div class="loading" id="loading"><div class="spinner"></div><p>Строим твою карту...</p></div>
+    <div id="result">
+      <div class="card">
+        <div class="result-header">
+          <div class="result-type" id="res-type-name">—</div>
+          <div class="result-meta" id="res-meta"></div>
+          <div style="margin-top:12px" id="res-badges"></div>
+        </div>
+        <div class="bodygraph-wrap" id="bodygraph-container"></div>
+        <div id="res-content"></div>
+        <button type="button" class="btn btn-secondary" id="back-btn">← Вернуться к выбору даты</button>
+        <div class="disclaimer"><strong>Важно:</strong> Образовательный разбор. Для точной карты используй профессиональный калькулятор.
+          <div class="links">
+            <a class="link-btn" href="https://openhumandesign.com/" target="_blank" rel="noopener">Open Human Design</a>
+            <a class="link-btn" href="https://www.mybodygraph.com/" target="_blank" rel="noopener">MyBodyGraph</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="types-ref">
+      <h2><span class="icon">◉</span> 5 типов энергии</h2>
+      <div class="types-grid" id="types-list"></div>
+    </div>
+  </div>
+  <footer>Human Design Service · Данные обрабатываются только в браузере</footer>
+  <script>
+    const TYPES = {
+      "Generator": { color:"#4ade80", percent:37, strategy:"Ждать, чтобы ответить", authority:"Сакральный (или Эмоциональный)", signature:"Удовлетворение", notSelf:"Фрустрация", aura:"Открытая и обволакивающая", short:"Жизненная сила. Строители мира.", description:"Генераторы — двигатель планеты. У вас определён Сакральный центр — источник устойчивой жизненной силы. Вы здесь, чтобы работать над тем, что любите.", expanded:"Генераторы составляют ~37%. Аура открыта. Главное — не инициировать из ума, а ждать отклика. Правильный отклик = удовлетворение.", how:["Не инициируй из головы. Жди отклика.","Если тело говорит «да» — вкладывайся полностью.","Сон: ложись, когда устал.","Избегай «должен» и «надо»."], strengths:["Устойчивая энергия","Мастерство","Притягательная аура","Удовлетворение от работы"], challenges:["Фрустрация","Инициация из ума","Трудности с отказом"], centersNote:"Обычно определён Сакрал." },
+      "Manifesting Generator": { color:"#22d3ee", percent:33, strategy:"Ждать, чтобы ответить → потом информировать", authority:"Сакральный / Эмоциональный", signature:"Удовлетворение + Покой", notSelf:"Фрустрация + Гнев", aura:"Открытая + сфокусированная", short:"Быстрые мультитаскеры.", description:"МГ — самые быстрые. Есть сакральная энергия и мотор к Горлу. Можно начинать быстрее, но сначала нужно ответить.", expanded:"~33%. Гибрид Генератора и Манифестора. Стратегия двойная. Можно менять курс.", how:["Сначала жди отклика, потом информируй.","Можно менять направление.","Пропускай ненужные шаги.","Информируй близких."], strengths:["Скорость","Гибкость","Сильная энергия","Быстрое завершение"], challenges:["Фрустрация + гнев","Слишком много проектов","Пропуск шагов"], centersNote:"Сакрал + канал к Горлу." },
+      "Projector": { color:"#f472b6", percent:20, strategy:"Ждать приглашения", authority:"Эмоциональный / Селезёночный / Эго / Self-Projected", signature:"Успех", notSelf:"Горечь", aura:"Сфокусированная и поглощающая", short:"Направляющие и видящие.", description:"Проекторы видят других и системы. Нет сакральной энергии «пахать», зато есть способность направлять.", expanded:"~20%. Аура поглощает другого. Жди признания и приглашения. Отдых критичен.", how:["Жди приглашения.","Не предлагай советы незваным.","Выбирай, кого направлять.","Работай умнее, не больше."], strengths:["Видение людей","Направление","Эффективность","Мудрость"], challenges:["Горечь","Выгорание","Сложность ждать"], centersNote:"Сакрал открыт." },
+      "Manifestor": { color:"#fb923c", percent:9, strategy:"Информировать перед действием", authority:"Эмоциональный / Селезёночный / Эго", signature:"Покой", notSelf:"Гнев", aura:"Закрытая и отталкивающая", short:"Инициаторы.", description:"Манифесторы могут и должны инициировать. Прямой доступ мотора к Горлу.", expanded:"~9%. Аура защитная. Информируй перед действием. После цикла — покой.", how:["Информируй перед действием.","Не нужно ждать приглашения.","Гнев — сигнал контроля.","После цикла — покой."], strengths:["Инициация","Воздействие","Независимость","Скорость"], challenges:["Гнев","Сопротивление","Сложность информировать"], centersNote:"Мотор к Горлу." },
+      "Reflector": { color:"#a78bfa", percent:1, strategy:"Ждать лунный цикл (28 дней)", authority:"Лунный", signature:"Удивление", notSelf:"Разочарование", aura:"Выборкающая и отражающая", short:"Зеркала общества.", description:"Все центры открыты. Отражаете здоровье сообщества. Большие решения — после лунного цикла.", expanded:"~1%. Максимально восприимчивы. Правильная среда = удивление.", how:["Жди 28 дней для больших решений.","Окружение критично.","Твоя роль — отражать.","Много уединения."], strengths:["Отражение","Чувствительность","Мудрость сообщества","Уникальность"], challenges:["Разочарование","Давление быть как все","Ожидание 28 дней"], centersNote:"Все центры открыты." }
+    };
+    const PROFILES = {"1/3":"Исследователь / Мученик","1/4":"Исследователь / Оппортунист","2/4":"Отшельник / Оппортунист","2/5":"Отшельник / Еретик","3/5":"Мученик / Еретик","3/6":"Мученик / Ролевая модель","4/6":"Оппортунист / Ролевая модель","4/1":"Оппортунист / Исследователь","5/1":"Еретик / Исследователь","5/2":"Еретик / Отшельник","6/2":"Ролевая модель / Отшельник","6/3":"Ролевая модель / Мученик"};
+    const CENTER_META = {
+      head:   { x:110, y:36,  size:22, shape:'tri-up',    label:'Голова',    labelY:58 },
+      ajna:   { x:110, y:78,  size:20, shape:'tri-down',  label:'Аджна',     labelY:100 },
+      throat: { x:110, y:122, size:18, shape:'square',    label:'Горло',     labelY:142 },
+      g:      { x:110, y:168, size:22, shape:'diamond',   label:'G',         labelY:192 },
+      ego:    { x:68,  y:168, size:16, shape:'tri-left',  label:'Эго',       labelY:190 },
+      sacral: { x:110, y:220, size:24, shape:'square',    label:'Сакрал',    labelY:244 },
+      spleen: { x:52,  y:200, size:16, shape:'tri-right', label:'Селезёнка', labelY:222 },
+      solar:  { x:168, y:200, size:16, shape:'tri-left',  label:'Солн.спл.', labelY:222 },
+      root:   { x:110, y:272, size:20, shape:'square',    label:'Корень',    labelY:294 }
+    };
+    function isDefined(typeKey, centerKey) {
+      if (typeKey === "Reflector") return false;
+      if (typeKey === "Generator") return ["sacral","root","spleen"].includes(centerKey);
+      if (typeKey === "Manifesting Generator") return ["sacral","throat","g","root"].includes(centerKey);
+      if (typeKey === "Projector") return ["ajna","throat","g","spleen"].includes(centerKey);
+      if (typeKey === "Manifestor") return ["throat","ego","solar","root"].includes(centerKey);
+      return false;
+    }
+    function shapePath(shape, x, y, s) {
+      const h = s;
+      switch (shape) {
+        case 'tri-up': return `M ${x} ${y-h} L ${x+h*0.9} ${y+h*0.55} L ${x-h*0.9} ${y+h*0.55} Z`;
+        case 'tri-down': return `M ${x} ${y+h} L ${x+h*0.9} ${y-h*0.55} L ${x-h*0.9} ${y-h*0.55} Z`;
+        case 'tri-left': return `M ${x-h} ${y} L ${x+h*0.55} ${y-h*0.9} L ${x+h*0.55} ${y+h*0.9} Z`;
+        case 'tri-right': return `M ${x+h} ${y} L ${x-h*0.55} ${y-h*0.9} L ${x-h*0.55} ${y+h*0.9} Z`;
+        case 'diamond': return `M ${x} ${y-h} L ${x+h} ${y} L ${x} ${y+h} L ${x-h} ${y} Z`;
+        default: return `M ${x-h*0.75} ${y-h*0.75} L ${x+h*0.75} ${y-h*0.75} L ${x+h*0.75} ${y+h*0.75} L ${x-h*0.75} ${y+h*0.75} Z`;
+      }
+    }
+    function renderBodygraph(typeKey, color) {
+      const centers = ["head","ajna","throat","g","ego","sacral","spleen","solar","root"];
+      let defs = `<defs>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#1a1f2e" stop-opacity="0.6"/><stop offset="100%" stop-color="#0d1018" stop-opacity="0.3"/></linearGradient>
+        <linearGradient id="definedGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="${color}" stop-opacity="0.95"/><stop offset="100%" stop-color="${color}" stop-opacity="0.7"/></linearGradient>
+      </defs>`;
+      let body = `<ellipse cx="110" cy="175" rx="72" ry="130" fill="url(#bodyGrad)" stroke="#2a3142" stroke-width="1" opacity="0.85"/><ellipse cx="110" cy="48" rx="28" ry="32" fill="url(#bodyGrad)" stroke="#2a3142" stroke-width="1" opacity="0.7"/>`;
+      const channels = [["head","ajna"],["ajna","throat"],["throat","g"],["g","sacral"],["sacral","root"],["throat","ego"],["ego","sacral"],["spleen","sacral"],["solar","sacral"],["spleen","throat"],["solar","throat"]];
+      let channelLayer = "";
+      channels.forEach(([a,b]) => {
+        const pa = CENTER_META[a], pb = CENTER_META[b];
+        if (!pa||!pb) return;
+        const active = isDefined(typeKey,a) && isDefined(typeKey,b);
+        const stroke = active ? color : "#2a3142";
+        const sw = active ? 3.2 : 1.4;
+        const opacity = active ? 0.95 : 0.55;
+        const filter = active ? 'filter="url(#softGlow)"' : '';
+        channelLayer += `<line x1="${pa.x}" y1="${pa.y}" x2="${pb.x}" y2="${pb.y}" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" opacity="${opacity}" ${filter}/>`;
+      });
+      let centerLayer = "";
+      centers.forEach(c => {
+        const m = CENTER_META[c];
+        if (!m) return;
+        const defined = isDefined(typeKey, c);
+        const path = shapePath(m.shape, m.x, m.y, m.size);
+        if (defined) {
+          centerLayer += `<path d="${path}" fill="url(#definedGrad)" stroke="${color}" stroke-width="2.2" filter="url(#glow)" opacity="1"/><path d="${path}" fill="none" stroke="#fff" stroke-width="0.6" opacity="0.35"/>`;
+        } else {
+          centerLayer += `<path d="${path}" fill="#141820" stroke="#3a4558" stroke-width="1.8" opacity="0.85"/>`;
+        }
+      });
+      let labelLayer = "";
+      centers.forEach(c => {
+        const m = CENTER_META[c];
+        if (!m) return;
+        const defined = isDefined(typeKey, c);
+        const fill = defined ? color : "#5a6478";
+        labelLayer += `<text x="${m.x}" y="${m.labelY}" text-anchor="middle" fill="${fill}" font-size="9.5" font-weight="${defined?'600':'400'}" font-family="Inter,sans-serif">${m.label}</text>`;
+      });
+      const badge = `<rect x="55" y="305" width="110" height="22" rx="11" fill="${color}" fill-opacity="0.15" stroke="${color}" stroke-width="1"/><text x="110" y="320" text-anchor="middle" fill="${color}" font-size="11" font-weight="600" font-family="Inter,sans-serif">${typeKey==="Manifesting Generator"?"Man. Generator":typeKey}</text>`;
+      return `<svg viewBox="0 0 220 335" xmlns="http://www.w3.org/2000/svg">${defs}${body}${channelLayer}${centerLayer}${labelLayer}${badge}</svg>`;
+    }
+    const typesList = document.getElementById('types-list');
+    Object.entries(TYPES).forEach(([key, t]) => {
+      const el = document.createElement('div');
+      el.className = 'type-card';
+      el.innerHTML = `<div class="type-dot" style="background:${t.color}"></div><div><h3>${key} <span style="color:var(--text-muted);font-weight:400;font-size:0.85rem">${t.percent}%</span></h3><p>${t.short}</p></div>`;
+      el.addEventListener('click', () => { document.getElementById('type-select').value = key; document.querySelectorAll('.type-card').forEach(c => c.classList.remove('active')); el.classList.add('active'); });
+      typesList.appendChild(el);
+    });
+    function showForm() {
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('form-card').classList.remove('hidden');
+      document.getElementById('intro-card').classList.remove('hidden');
+      document.getElementById('dist-card').classList.remove('hidden');
+      document.getElementById('types-ref').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    document.getElementById('back-btn').addEventListener('click', showForm);
+    document.getElementById('hd-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim() || 'Друг';
+      const date = document.getElementById('date').value;
+      const time = document.getElementById('time').value;
+      const tz = document.getElementById('tz').value;
+      let typeKey = document.getElementById('type-select').value;
+      if (!date || !time) { alert('Укажи дату и время рождения'); return; }
+      document.getElementById('form-card').classList.add('hidden');
+      document.getElementById('intro-card').classList.add('hidden');
+      document.getElementById('dist-card').classList.add('hidden');
+      document.getElementById('types-ref').classList.add('hidden');
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('result').style.display = 'none';
+      await new Promise(r => setTimeout(r, 900));
+      if (!typeKey) {
+        const hash = date.split('-').join('') + time.replace(':', '');
+        const keys = Object.keys(TYPES);
+        typeKey = keys[parseInt(hash.slice(-2), 10) % keys.length];
+      }
+      const t = TYPES[typeKey];
+      const profileKeys = Object.keys(PROFILES);
+      const profile = profileKeys[Math.floor(Math.random() * profileKeys.length)];
+      document.getElementById('res-type-name').textContent = typeKey;
+      document.getElementById('res-type-name').style.color = t.color;
+      document.getElementById('res-meta').textContent = `${name} · ${date} · ${time} · ${tz.split('/').pop()}`;
+      document.getElementById('res-badges').innerHTML = `<span class="badge">Стратегия: ${t.strategy}</span><span class="badge">Авторитет: ${t.authority}</span><span class="badge">Профиль: ${profile}</span>`;
+      document.getElementById('bodygraph-container').innerHTML = renderBodygraph(typeKey, t.color);
+      const content = `
+        <div class="aura-box"><div class="aura-title">Аура</div><div class="aura-name" style="color:${t.color}">${t.aura}</div></div>
+        <p class="long-text">${t.description}</p><p class="long-text">${t.expanded}</p>
+        <div class="stat-grid"><div class="stat-card"><div class="num" style="color:${t.color}">${t.percent}%</div><div class="lbl">людей в мире</div></div><div class="stat-card"><div class="num" style="color:${t.color}">${t.signature}</div><div class="lbl">сигнатура</div></div></div>
+        <div class="section-title">Ключевые характеристики</div>
+        <div class="info-block"><h4>Стратегия</h4><p><strong>${t.strategy}</strong></p></div>
+        <div class="info-block"><h4>Внутренний авторитет</h4><p><strong>${t.authority}</strong></p></div>
+        <div class="info-block"><h4>Сигнатура и Not-Self</h4><p>Правильность → <strong>${t.signature}</strong>. Иначе → <strong>${t.notSelf}</strong>.</p></div>
+        <div class="info-block"><h4>Профиль ${profile}</h4><p>${PROFILES[profile]}</p></div>
+        <div class="section-title">Сильные стороны</div>
+        <div class="highlight-list">${t.strengths.map(s=>`<div class="highlight-item"><div class="dot" style="background:${t.color}"></div><div>${s}</div></div>`).join('')}</div>
+        <div class="section-title">Типичные вызовы</div>
+        <div class="highlight-list">${t.challenges.map(s=>`<div class="highlight-item"><div class="dot" style="background:#fb923c"></div><div>${s}</div></div>`).join('')}</div>
+        <div class="section-title">Как жить в соответствии с дизайном</div>
+        <ul class="tips-list">${t.how.map(tip=>`<li>${tip}</li>`).join('')}</ul>
+        <div class="section-title">Центры (типичная картина)</div>
+        <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:8px">${t.centersNote}</p>
+        <div class="centers-grid">
+          <div class="center-item ${isDefined(typeKey,'head')?'defined':'open'}">Голова</div>
+          <div class="center-item ${isDefined(typeKey,'ajna')?'defined':'open'}">Аджна</div>
+          <div class="center-item ${isDefined(typeKey,'throat')?'defined':'open'}">Горло</div>
+          <div class="center-item ${isDefined(typeKey,'g')?'defined':'open'}">G-центр</div>
+          <div class="center-item ${isDefined(typeKey,'ego')?'defined':'open'}">Эго</div>
+          <div class="center-item ${isDefined(typeKey,'sacral')?'defined':'open'}">Сакрал</div>
+          <div class="center-item ${isDefined(typeKey,'spleen')?'defined':'open'}">Селезёнка</div>
+          <div class="center-item ${isDefined(typeKey,'solar')?'defined':'open'}">Солн. сплетение</div>
+          <div class="center-item ${isDefined(typeKey,'root')?'defined':'open'}">Корень</div>
+        </div>
+        <div class="section-title">Распределение типов</div>
+        <div class="bar-chart">${Object.entries(TYPES).map(([k,v])=>`<div class="bar-row"><div class="bar-label" style="${k===typeKey?'color:'+v.color+';font-weight:600':''}">${k===typeKey?'→ ':''}${k}</div><div class="bar-track"><div class="bar-fill" style="width:${v.percent}%;background:${v.color};opacity:${k===typeKey?1:0.45}"></div></div><div class="bar-value">${v.percent}%</div></div>`).join('')}</div>`;
+      document.getElementById('res-content').innerHTML = content;
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('result').style.display = 'block';
+      document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    document.getElementById('date').value = '1990-06-15';
+  </script>
 </body>
 </html>
